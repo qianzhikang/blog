@@ -14,4 +14,13 @@ tags:  # 博客标签（可选）
 ---
 ElasticSearch系列
 - [ElasticSearch安装](/blog/posts/es/es安装)
-- []
+- 
+
+常用设计模式
+
+- [单例模式](/blog/posts/design/设计模式之单例模式)
+- [观察者模式](/blog/posts/design/设计模式之观察者模式)
+
+Nginx系列
+
+- [nginx入门](/blog/posts/nginx/nginx入门)
