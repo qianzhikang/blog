@@ -1,0 +1,19 @@
+{
+  "name": "blog",
+  "version": "1.0.0",
+  "description": "my blog",
+  "main": "index.js",
+  "scripts": {
+    "docs:dev": "vuepress dev docs --clean-cache",
+    "docs:build": "vuepress build docs --clean-cache"
+  },
+  "author": "qzk",
+  "license": "ISC",
+  "devDependencies": {
+    "vuepress": "2.0.0-beta.49",
+    "vuepress-theme-gungnir": "^2.0.0-alpha.26"
+  },
+  "dependencies": {
+    "vuepress-plugin-giscus": "^2.0.0-alpha.26"
+  }
+}
