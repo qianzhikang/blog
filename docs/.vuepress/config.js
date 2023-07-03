@@ -31,7 +31,7 @@ module.exports = {
       avatar: "/images/avatar.png",
 
       // 必须：个人简介，将在首页显示
-      description: "on the way",
+      description: "still on the way 💪",
     },
 
 
@@ -40,15 +40,20 @@ module.exports = {
 
     // navbar 右侧
     navbar: [
+      {
+        text: '文档',
+        link: '/posts/catalog',
+      },
       // NavbarItem
       {
-        text: '归档',
+        text: '博客',
         link: '/tags',
       },
       {
         text: '关于',
         link: '/links/',
-      }
+      },
+      
     ],
 
     // 首页轮播图
