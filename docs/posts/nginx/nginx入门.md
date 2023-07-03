@@ -28,17 +28,17 @@ Nginx 官网：http://nginx.org/
 
 > 下载windows版本支持的稳定版`Nginx`
 
-![进入下载页](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241358895.png)
+![进入下载页](/images/posts/article-img/202204241358895.png)
 
-![下载稳定版](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241359043.png)
+![下载稳定版](/images/posts/article-img/202204241359043.png)
 
 > 解压得到文件夹，`注意解压路径不要含有中文字符，否则可能启动失败！`双击 `exe` 执行文件 或 在此启动命令行（使用管理员权限），执行 `nginx.exe`。
 
-![解压后的文件夹](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241401040.png)
+![解压后的文件夹](/images/posts/article-img/202204241401040.png)
 
 > 访问 `localhost:80` 测试
 
-![成功页面](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241405594.png)
+![成功页面](/images/posts/article-img/202204241405594.png)
 
 
 
@@ -69,11 +69,11 @@ server {
 npm run build
 ```
 
-![生成的dist](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241421464.png)
+![生成的dist](/images/posts/article-img/202204241421464.png)
 
 > 将`dist`文件夹复制到Nginx根目录下的`/html`文件夹内，并且重启Nginx。
 
-![复制dist文件到目标目录下](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241423536.png)
+![复制dist文件到目标目录下](/images/posts/article-img/202204241423536.png)
 
 在`Nginx根目录`下，管理员身份启动命令行，输入命令，重新加载配置文件。
 
@@ -83,7 +83,7 @@ nginx -s reload
 
 > 重启后，再次访问`localhost:80`
 
-![成功访问项目](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241416197.png)
+![成功访问项目](/images/posts/article-img/202204241416197.png)
 
 
 
@@ -119,7 +119,7 @@ docker pull nginx
 docker images
 ```
 
-![拉取的Nginx镜像](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241432663.png)
+![拉取的Nginx镜像](/images/posts/article-img/202204241432663.png)
 
 > 使用镜像创建并启动容器测试
 
@@ -134,7 +134,7 @@ docker run -d --name mynginx -p 80:80 nginx
 
 **`注意，这里需要ECS的 80 端口开启访问，否则会被防火墙拦截！`**
 
-![测试访问远程nginx](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241439677.png)
+![测试访问远程nginx](/images/posts/article-img/202204241439677.png)
 
 到这里，基于docker镜像的nginx的linux安装已经完成了，但是如果想要像上文一样部署项目，则需要进入容器内部修改配置文件。
 
@@ -146,7 +146,7 @@ docker run -d --name mynginx -p 80:80 nginx
 docker exec -it 容器id bash
 ```
 
-![容器内的nginx.conf](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241450817.png)
+![容器内的nginx.conf](/images/posts/article-img/202204241450817.png)
 
 查看nginx.conf的内容
 
@@ -154,11 +154,11 @@ docker exec -it 容器id bash
 cat nginx.conf
 ```
 
-![nginx.conf](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241453969.png)
+![nginx.conf](/images/posts/article-img/202204241453969.png)
 
 查看`/etc/nginx/conf.d/*.conf`文件
 
-![default.conf](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241456908.png)
+![default.conf](/images/posts/article-img/202204241456908.png)
 
 退出容器
 
@@ -228,11 +228,11 @@ docker run -d --name mynginx -p 80:80 -v /home/docker/nginx/nginx.conf:/etc/ngin
 vim default.conf
 ```
 
-![image-20220424152021395](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241520444.png)
+![image-20220424152021395](/images/posts/article-img/202204241520444.png)
 
 > 将需要部署的项目`dist`文件夹上传到云服务器的`/home/docker/nginx/html`下，并重新载入nginx的配置。
 
-![将dist拷贝到html下](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241526833.png)
+![将dist拷贝到html下](/images/posts/article-img/202204241526833.png)
 
 进入容器
 
@@ -248,23 +248,23 @@ nginx -s reload
 
 > 访问远程 nginx 测试  （http://远程主机IP:80/）
 
-![成功访问](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204241530914.png)
+![成功访问](/images/posts/article-img/202204241530914.png)
 
 > 多  `location{}` 的配置时，指定目录不是使用`root`,而是使用 `alias`。
 
-![多location配置](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204242343653.png)
+![多location配置](/images/posts/article-img/202204242343653.png)
 
 ### 3.5 Nginx for Linux
 
 下载 Linux 的压缩包，上传服务器端
 
-![linux版](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204242157449.png)
+![linux版](/images/posts/article-img/202204242157449.png)
 
 > 解压
 
 来到存放压缩包的目录
 
-![压缩文件](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204242231044.png)
+![压缩文件](/images/posts/article-img/202204242231044.png)
 
 命令解压
 
@@ -276,7 +276,7 @@ tar -zxvf nginx-1.18.0.tar.gz
 
 进入解压目录
 
-![nginx解压目录下](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204242233703.png)
+![nginx解压目录下](/images/posts/article-img/202204242233703.png)
 
 执行脚本进行安装前的配置工作
 
@@ -300,7 +300,7 @@ make install
 whereis nginx
 ```
 
-![查看nginx的安装目录](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204242238076.png)
+![查看nginx的安装目录](/images/posts/article-img/202204242238076.png)
 
 > 进入nginx的安装目录下的`sbin`，启动nginx
 
@@ -313,11 +313,11 @@ cd /usr/local/nginx/sbin/
 
 80端口被占用，需要修改端口，然后reload重启遇到报错
 
-![reload 报错](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204242242769.jpg)
+![reload 报错](/images/posts/article-img/202204242242769.jpg)
 
 解决方法，修改 nginx.conf 文件，将pid的注释去掉
 
-![image-20220424224432468](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204242244510.png)
+![image-20220424224432468](/images/posts/article-img/202204242244510.png)
 
 一些其他的命令：
 
@@ -330,7 +330,7 @@ ps aux|grep nginx  查看nginx进程
 
 > 访问测试
 
-![访问成功](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204242229314.png)
+![访问成功](/images/posts/article-img/202204242229314.png)
 
 *删除nginx：`rm -rf usr/local/nginx`*
 
@@ -346,11 +346,11 @@ ps aux|grep nginx  查看nginx进程
 
 - 普通访问：
 
-![普通流程](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204250959333.png)
+![普通流程](/images/posts/article-img/202204250959333.png)
 
 - 反向代理：
 
-![反向代理](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204250950382.png)
+![反向代理](/images/posts/article-img/202204250950382.png)
 
 
 
@@ -412,7 +412,7 @@ java -jar nginx-proxy --server.port=8081
 
 修改`/nginx-1.20.2/conf/nginx.conf`文件
 
-![配置代理](https://pic-go.oss-cn-shanghai.aliyuncs.com/typora-img/202204251223529.png)
+![配置代理](/images/posts/article-img/202204251223529.png)
 
 > 重新载入nginx配置，进行测试
 
