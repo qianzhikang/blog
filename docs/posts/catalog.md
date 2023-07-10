@@ -12,9 +12,12 @@ headerImageCreditLink: https://google.com/  # 图片来源的链接（可选，�
 tags:  # 博客标签（可选）
   - 首页列表
 ---
+MongoDB系列
+- [MongoDB基础使用](/blog/posts/mongo/mongodb基础使用)
+
 ElasticSearch系列
 - [ElasticSearch安装](/blog/posts/es/es安装)
-- 
+- [ElasticSearch基础概念以及使用](/blog/posts/es/es基础概念以及使用)
 
 常用设计模式
 

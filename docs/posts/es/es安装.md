@@ -44,8 +44,8 @@ docker run -d \
     --name es \
     -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" \
     -e "discovery.type=single-node" \
-    -v /home/es-data:/usr/share/elasticsearch/data \
-    -v /home/es-plugins:/usr/share/elasticsearch/plugins \
+    -v es-data:/usr/share/elasticsearch/data \
+    -v es-plugins:/usr/share/elasticsearch/plugins \
     --privileged \
     --network es-net \
     -p 9200:9200 \
@@ -60,20 +60,11 @@ elasticsearch:7.12.1
 - `-e "ES_JAVA_OPTS=-Xms512m -Xmx512m"`：内存大小
 - `-e "discovery.type=single-node"`：非集群模式
 - `-v es-data:/usr/share/elasticsearch/data`：挂载逻辑卷，绑定es的数据目录
-- `-v es-logs:/usr/share/elasticsearch/logs`：挂载逻辑卷，绑定es的日志目录
 - `-v es-plugins:/usr/share/elasticsearch/plugins`：挂载逻辑卷，绑定es的插件目录
 - `--privileged`：授予逻辑卷访问权
 - `--network es-net` ：加入一个名为es-net的网络中
 - `-p 9200:9200`：端口映射配置
 
-> 启动报错`java.nio.file.AccessDeniedException: /usr/share/elasticsearch/data/nodes"`
->
-> 原因：挂载目录无权限问题
->
-> ```sh
-> chmod 777 /home/es-data
-> chmod 777 /home/es-plugins
-> ```
 
 ## 测试连接
 
@@ -110,20 +101,40 @@ kibana:7.12.1
 
 访问： http://ip:5601/ 即可进入控制台![image-20230411151401374](/images/posts/article-img/202304111514410.png)
 
-# 安装中文分词器IK
+## 安装中文分词器IK
 
-## 安装
+**1.查看数据卷挂载目录**
 
 ```sh
-# 进入容器内部
-docker exec -it es /bin/bash
+docker volume inspect es-plugins
+```
 
-# 在线下载并安装
-./bin/elasticsearch-plugin  install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.12.1/elasticsearch-analysis-ik-7.12.1.zip
+![image-20230704092903266](/images/posts/article-img/202307040929959.png)
 
-#退出
-exit
-#重启容器
+**2.下载ik分词器**
+
+传送门：https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.12.1/elasticsearch-analysis-ik-7.12.1.zip
+
+**3.上传**
+
+上传到上文的挂载目录`/var/lib/docker/volumes/es-plugins/_data`
+
+**4.新建文件夹ik并解压**
+
+```sh
+# 进入挂载目录
+cd /var/lib/docker/volumes/es-plugins/_data
+# 新建文件夹ik
+mkdir ik
+# 移动zip文件
+mv elasticsearch-analysis-ik-7.12.1.zip ik
+# 解压缩
+unzip elasticsearch-analysis-ik-7.12.1.zip
+```
+
+**5.重启容器**
+
+```sh
 docker restart es
 ```
 
