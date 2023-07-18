@@ -385,3 +385,571 @@ void deleteDoc() throws IOException {
 
 
 ## 3. DSL查询文档
+
+Elasticsearch提供了基于JSON的DSL（[Domain Specific Language](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html)）来定义查询。
+
+### 3.1 全文检索
+
+全文检索查询的基本流程如下：
+
+- 对用户搜索的内容做分词，得到词条
+- 根据词条去倒排索引库中匹配，得到文档id
+- 根据文档id找到文档，返回给用户
+
+比较常用的场景包括：
+
+- 商城的输入框搜索
+- 百度输入框搜索
+
+**基础语法**
+
+```json
+GET /indexName/_search
+{
+  "query": {
+    "match": {             // 单字段匹配
+      "FIELD": "TEXT"
+    }
+  }
+}
+
+
+GET /indexName/_search
+{
+  "query": {
+    "multi_match": {         // 多字段匹配
+      "query": "TEXT",
+      "fields": ["FIELD1", " FIELD12"]
+    }
+  }
+}
+--------------------示例---------------------
+GET /shop/_search
+{
+  "query": {
+    "match": {
+      "all": "苏州中心超市"
+    }
+  }
+}
+```
+
+**查询结果解析**
+
+```json
+{
+   "took":3, 									// 查询所花费的时间，以毫秒为单位
+   "timed_out":false,					// 指示查询是否超时，如果为false，则表示查询未超时。
+   "_shards":{								// 			包含关于查询分片的信息的对象。
+      "total":1,							// 			总共涉及的分片数。
+      "successful":1,					// 			成功执行查询的分片数。
+      "skipped":0,						// 			跳过的分片数。
+      "failed":0              // 			执行查询失败的分片数。
+   },
+   "hits":{                   // 包含与查询匹配的文档的信息。
+      "total":{								// 符合查询条件的文档总数。
+         "value":2,						// 文档总数。
+         "relation":"eq"      // 关系，表示value值的含义，"eq"表示确切匹配。
+      },
+      "max_score":0.6951314,  // 匹配文档中的最高分数。
+      "hits":[                // 实际匹配的文档列表。
+         {
+            "_index":"shop",  // 文档所属的索引。
+            "_type":"_doc",   // 文档类型。
+            "_id":"10100001", // 文档的唯一标识符。
+            "_score":0.6951314,  // 文档的匹配分数。
+            "_source":{          // 文档的实际内容。
+               "address":"local",
+               "brand":"苹果",
+               "id":10100001,
+               "location":"31.2497,120.3925",
+               "name":"苹果",
+               "price":10000,
+               "score":45
+            }
+         },
+         {
+            "_index":"shop",
+            "_type":"_doc",
+            "_id":"10100003",
+            "_score":0.5665797,
+            "_source":{
+               "address":"local",
+               "brand":"苹果",
+               "id":10100003,
+               "location":"31.2497,120.3925",
+               "name":"苹果2店",
+               "price":30000,
+               "score":65
+            }
+         }
+      ]
+   }
+}
+```
+
+
+
+**RestClient使用**
+
+```java
+@Test
+void fullQuery() throws IOException {
+    // 1.准备Request
+    SearchRequest request = new SearchRequest("shop");
+    // 2.准备DSL
+    request.source()
+            .query(QueryBuilders.matchQuery("all", "苹果"));
+    // 3.发送请求
+    SearchResponse response = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+  	// 4.解析结果
+    SearchHit[] hits = response.getHits().getHits();
+    for (SearchHit hit : hits) {
+        System.out.println(hit.getSourceAsString());
+    }
+}
+```
+
+**结果解析**
+
+```java
+    private void handleResponse(SearchResponse response) {
+        // 4.解析响应
+        SearchHits searchHits = response.getHits();
+        // 4.1.获取总条数
+        long total = searchHits.getTotalHits().value;
+        System.out.println("共搜索到" + total + "条数据");
+        // 4.2.文档数组
+        SearchHit[] hits = searchHits.getHits();
+        // 4.3.遍历
+        for (SearchHit hit : hits) {
+            // 获取文档source
+            String json = hit.getSourceAsString();
+            System.out.println(json);
+        }
+    }
+```
+
+
+
+### 3.2 精准查询
+
+#### 1) term查询
+
+因为精确查询的字段搜是不分词的字段，因此查询的条件也必须是**不分词**的词条。查询时，输入的内容跟自动值完全匹配时才认为符合条件。
+
+**基础语法**
+
+```json
+// term查询
+GET /indexName/_search
+{
+  "query": {
+    "term": {
+      "FIELD": {
+        "value": "VALUE"
+      }
+    }
+  }
+}
+---------------示例---------------------
+// term查询
+GET /shop/_search
+{
+  "query": {
+    "term": {
+      "FIELD": {
+        "score": "45"
+      }
+    }
+  }
+}
+
+```
+
+
+
+**RestClient使用**
+
+```java
+/**
+ * 精确查询：词条查询
+ * @throws IOException
+ */
+@Test
+void termQuery() throws IOException {
+    // 1.准备Request
+    SearchRequest request = new SearchRequest("shop");
+    // 2.准备DSL
+    request.source()
+            // term 词条查询，分数为45的
+            .query(QueryBuilders.termQuery("score", "45"));
+    // 3.发送请求
+    SearchResponse response = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+    // 解析结果
+    handleResponse(response);
+}
+```
+
+
+
+#### 2)  range查询
+
+范围查询，一般应用在对数值类型做范围过滤的时候。
+
+
+
+**基础语法**
+
+```json
+// range查询
+GET /indexName/_search
+{
+  "query": {
+    "range": {
+      "FIELD": {
+        "gte": 10, // 这里的gte代表大于等于，gt则代表大于
+        "lte": 20 // lte代表小于等于，lt则代表小于
+      }
+    }
+  }
+}
+------------------示例----------------------
+// range查询
+GET /shop/_search
+{
+  "query": {
+    "range": {
+      "price": {
+        "gte": 10000, // 这里的gte代表大于等于，gt则代表大于
+        "lte": 25000 // lte代表小于等于，lt则代表小于
+      }
+    }
+  }
+}
+```
+
+
+
+**RestClient使用**
+
+```java
+/**
+ * 范围查询
+ */
+@Test
+void rangQuery() throws IOException {
+    // 1.准备Request
+    SearchRequest request = new SearchRequest("shop");
+    // 2.准备DSL
+    request.source()
+            // term 词条查询，分数为45的
+            .query(QueryBuilders.rangeQuery("price").gte(10000).lte(25000));
+    // 3.发送请求
+    SearchResponse response = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+    // 解析结果
+    handleResponse(response);
+}
+```
+
+### 3.3 聚合查询
+
+**算分函数查询**
+
+一般用于为含有特定字段的文档提升查询打分使用。如需要前置一些广告排名位。
+
+**基础语法说明**
+
+![image-20230717090309422](/images/posts/article-img/image-20230717090309422.png)
+
+
+
+**RestClient使用**
+
+![image-20230717091709640](/images/posts/article-img/image-20230717091709640.png)
+
+```java
+    /**
+     * 调整文档算分排名查询
+     */
+    @Test
+    void functionScoreQuery() throws IOException {
+        FunctionScoreQueryBuilder functionScoreQuery = QueryBuilders.functionScoreQuery(
+                QueryBuilders.matchQuery("brand", "苹果"),      // 原始查询条件
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
+                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+                                QueryBuilders.termQuery("isAd", true),     // 过滤条件
+                                ScoreFunctionBuilders.weightFactorFunction(5)           // 算分权重
+                        )
+                }
+        );
+        functionScoreQuery.boostMode(CombineFunction.MULTIPLY);         // 加权模式
+
+
+        // 准备Request
+        SearchRequest request = new SearchRequest("shop");
+        request.source().query(functionScoreQuery);
+
+        // 查询，处理结果
+        SearchResponse res = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+        handleResponse(res);
+    }
+```
+
+### 3.4 布尔查询
+
+布尔查询是一个或多个查询子句的组合，每一个子句就是一个**子查询**。子查询的组合方式有：
+
+- must：必须匹配每个子查询，类似“与”
+- should：选择性匹配子查询，类似“或”
+- must_not：必须不匹配，**不参与算分**，类似“非”
+- filter：必须匹配，**不参与算分**
+
+**基础语法示例**
+
+```json
+GET /hotel/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"term": {"city": "上海" }}
+      ],
+      "should": [
+        {"term": {"brand": "皇冠假日" }},
+        {"term": {"brand": "华美达" }}
+      ],
+      "must_not": [
+        { "range": { "price": { "lte": 500 } }}
+      ],
+      "filter": [
+        { "range": {"score": { "gte": 45 } }}
+      ]
+    }
+  }
+}
+```
+
+**RestClient使用**
+
+```java
+/**
+     * 布尔查询
+     */
+    @Test
+    void boolQuery() throws IOException {
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+        // 名字必须包含"苹果"
+        boolQuery.must(QueryBuilders.termQuery("name", "苹果"));
+        // 评分应该大于"65"
+        boolQuery.should(QueryBuilders.rangeQuery("score").gte(65));
+        // 价格必须大于等于30000
+        boolQuery.filter(QueryBuilders.rangeQuery("price")
+                .gte(30000));
+
+        // 准备Request
+        SearchRequest request = new SearchRequest("shop");
+        request.source().query(boolQuery);
+
+        // 查询，处理结果
+        SearchResponse res = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+        handleResponse(res);
+    }
+```
+
+
+
+### 3.5 地理查询
+
+附近查询，也叫做距离查询（geo_distance）：查询到指定中心点小于某个距离值的所有文档。
+
+换句话来说，在地图上找一个点作为圆心，以指定距离为半径，画一个圆，落在圆内的坐标都算符合条件：
+
+![vZrdKAh19C](/images/posts/article-img/vZrdKAh19C.gif)
+
+**基础语法**
+
+```json
+// geo_distance 查询
+GET /indexName/_search
+{
+  "query": {
+    "geo_distance": {
+      "distance": "15km", // 半径
+      "local": "31.21,121.5" // 圆心
+    }
+  }
+}
+```
+
+
+
+**地理位置查询**
+
+```java
+/**
+     * 地理位置查询
+     */
+    @Test
+    void geoQuery() throws IOException {
+        // 指定距离查询
+        GeoDistanceQueryBuilder location = QueryBuilders
+                // 文档中地理位置的字段
+                .geoDistanceQuery("location")
+                // 指定圆心
+                .point(31.2497, 120.3925)
+                // 指定距离
+                .distance("3km");
+        // 准备Request
+        SearchRequest request = new SearchRequest("shop");
+        request.source().query(location);
+        // 查询，处理结果
+        SearchResponse res = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+        handleResponse(res);
+    }
+```
+
+
+
+**地理位置排序查询**
+
+```java
+/**
+     * 地理位置排序查询
+     */
+    @Test
+    void geoQuerySort() throws IOException {
+
+        GeoDistanceSortBuilder location = SortBuilders
+                // 距离排序，参数为 文档中经纬度字段 和 圆心位置
+                .geoDistanceSort("location", new GeoPoint(31.2497, 120.3925))
+                // 距离升序
+                .order(SortOrder.ASC)
+                // 单位km
+                .unit(DistanceUnit.KILOMETERS);
+
+        // 准备Request
+        SearchRequest request = new SearchRequest("shop");
+        request.source().sort(location);
+        // 查询，处理结果
+        SearchResponse res = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+        handleResponse(res);
+    }
+```
+
+
+
+## 4. 查询结果处理
+
+### 4.1 分页&排序
+
+![image-20230718091152616](/images/posts/article-img/image-20230718091152616.png)
+
+```java
+		/**
+     * 排序、分页
+     */
+    @Test
+    void pageAndSort() throws IOException {
+        // 页码，每页大小
+        int page = 1, size = 5;
+        // 1.准备Request
+        SearchRequest request = new SearchRequest("shop");
+        // 2.准备DSL
+        // 2.1.query
+        request.source().query(QueryBuilders.matchAllQuery());
+        // 2.2.排序 sort
+        request.source().sort("price", SortOrder.DESC);
+        // 2.3.分页 from、size
+        request.source().from((page - 1) * size).size(5);
+        // 3.发送请求
+        SearchResponse response = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+        // 4.解析响应
+        handleResponse(response);
+    }
+```
+
+
+
+### 4.2 高亮搜索关键字
+
+**高亮查询必须使用全文检索查询，并且要有搜索关键字，才可以对关键字高亮。**
+
+- `field("")`: 这指定应该高亮显示的搜索结果字段。在这个例子中，字段名为"name"。
+
+- `requireFieldMatch(bool)`: 这个设置决定了Elasticsearch是否只高亮显示指定的字段（"name"字段），还是也要高亮显示其他字段中的匹配项。当设置为`false`时，意味着即使搜索查询在其他字段中匹配了词语，高亮显示仍然会应用于"name"字段。（注：在查询字段为复合字段copyto时候，需要设置为false，否则返回highlight结果为空！）
+
+
+
+![image-20230718100937782](/images/posts/article-img/image-20230718100937782.png)
+
+**高亮的结果与查询的文档结果默认是分离的**
+
+查询结果处理
+
+- 从结果中获取source。hit.getSourceAsString()，这部分是非高亮结果，json字符串。还需要反序列为HotelDoc对象
+- 获取高亮结果。hit.getHighlightFields()，返回值是一个Map，key是高亮字段名称，值是HighlightField对象，代表高亮值
+- 从map中根据高亮字段名称，获取高亮字段值对象HighlightField
+- 从HighlightField中获取Fragments，并且转为字符串。这部分就是真正的高亮字符串了
+- 用高亮的结果替换HotelDoc中的非高亮结果
+
+![image-20230718101001825](/images/posts/article-img/image-20230718101001825.png)
+
+**RestClient中设置查询结果高亮处理**
+
+```java
+/**
+     * 高亮搜索关键字
+     */
+    @Test
+    void highlightField() throws IOException {
+        SearchRequest request = new SearchRequest("shop");
+        request.source().query(QueryBuilders.matchQuery("all", "苹果"));
+        // 高亮检索配置
+        request.source().highlighter(new HighlightBuilder()
+                // 那些字段需要匹配高亮
+                .field("name").field("brand")
+                // 是否只高亮显示指定的字段，由于此例中，查询的是复合字段all，所以只能为false
+                .requireFieldMatch(false));
+        SearchResponse response = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+        // 处理高亮
+        handleHighlightResp(response);
+    }
+
+
+    private void handleHighlightResp(SearchResponse response) {
+        // 文档数组
+        SearchHit[] hits = response.getHits().getHits();
+        // 遍历
+        for (SearchHit hit : hits) {
+            // 获取文档source
+            String json = hit.getSourceAsString();
+            // 反序列化
+            ShopDto shopDto = JSON.parseObject(json, ShopDto.class);
+
+            // 处理高亮关键字
+            Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+            if (!CollectionUtils.isEmpty(highlightFields)) {
+                // 处理name高亮
+                HighlightField nameField = highlightFields.get("name");
+                if (nameField != null) {
+                    // 获取高亮值
+                    String name = nameField.getFragments()[0].string();
+                    // 覆盖非高亮结果
+                    shopDto.setName(name);
+                }
+
+                // 处理brand高亮
+                HighlightField brandField = highlightFields.get("brand");
+                if (brandField != null) {
+                    // 获取高亮值
+                    String brand = brandField.getFragments()[0].string();
+                    // 覆盖非高亮结果
+                    shopDto.setBrand(brand);
+                }
+            }
+
+            System.out.println("shop = " + shopDto);
+        }
+    }
+```
