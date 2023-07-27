@@ -27,3 +27,6 @@ ElasticSearch系列
 Nginx系列
 
 - [nginx入门](/blog/posts/nginx/nginx入门)
+
+Shell系列
+- [Shell基础](/blog/posts/shell/Shell)
